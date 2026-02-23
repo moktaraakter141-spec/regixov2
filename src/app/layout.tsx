@@ -6,8 +6,13 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://regixo.com"), // ✅ এটা যোগ করা হয়েছে
   title: "Regixo",
   description: "Event Registration Platform",
+  openGraph: {
+    siteName: "Regixo",
+    images: ["/og-image.jpeg"], // ✅ default OG image
+  },
 };
 
 export default function RootLayout({

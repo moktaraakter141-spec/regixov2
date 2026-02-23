@@ -18,7 +18,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import {
   ArrowLeft,
   Save,
@@ -251,6 +258,590 @@ const FieldError = ({ message }: { message?: string }) => {
   );
 };
 
+// ─── Custom Calendar Grid ─────────────────────────────────────────────────────
+
+const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+const MONTHS_SHORT = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+interface CustomCalendarProps {
+  selected: Date | undefined;
+  onSelect: (date: Date) => void;
+}
+
+const CustomCalendar = ({ selected, onSelect }: CustomCalendarProps) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const [viewYear, setViewYear] = useState(
+    selected ? selected.getFullYear() : today.getFullYear(),
+  );
+  const [viewMonth, setViewMonth] = useState(
+    selected ? selected.getMonth() : today.getMonth(),
+  );
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [showYearPicker, setShowYearPicker] = useState(false);
+
+  // Swipe handling
+  const touchStartX = useRef<number | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) nextMonth();
+      else prevMonth();
+    }
+    touchStartX.current = null;
+  };
+
+  const prevMonth = () => {
+    if (viewMonth === 0) {
+      setViewMonth(11);
+      setViewYear((y) => y - 1);
+    } else setViewMonth((m) => m - 1);
+  };
+  const nextMonth = () => {
+    if (viewMonth === 11) {
+      setViewMonth(0);
+      setViewYear((y) => y + 1);
+    } else setViewMonth((m) => m + 1);
+  };
+
+  // Year range: current year ± 5
+  const yearRange = Array.from(
+    { length: 8 },
+    (_, i) => today.getFullYear() + i,
+  );
+
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const cells: (number | null)[] = [
+    ...Array(firstDay).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  if (showMonthPicker) {
+    return (
+      <div className="w-full select-none">
+        <div className="flex items-center gap-2 px-1 mb-3">
+          <button
+            type="button"
+            onClick={() => setShowMonthPicker(false)}
+            className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-accent transition-colors text-muted-foreground"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M10 12L6 8L10 4"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+          <span className="text-sm font-semibold">{viewYear}</span>
+        </div>
+        <div className="grid grid-cols-3 gap-1.5">
+          {MONTHS_SHORT.map((m, i) => {
+            const isPast =
+              viewYear === today.getFullYear() && i < today.getMonth();
+            return (
+              <button
+                key={m}
+                type="button"
+                disabled={isPast}
+                onClick={() => {
+                  setViewMonth(i);
+                  setShowMonthPicker(false);
+                }}
+                className={cn(
+                  "h-9 rounded-md text-sm transition-colors",
+                  isPast && "opacity-25 cursor-not-allowed",
+                  !isPast &&
+                    viewMonth === i &&
+                    "bg-primary text-primary-foreground font-semibold",
+                  !isPast && viewMonth !== i && "hover:bg-accent",
+                )}
+              >
+                {m}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  if (showYearPicker) {
+    return (
+      <div className="w-full select-none">
+        <div className="flex items-center gap-2 px-1 mb-3">
+          <button
+            type="button"
+            onClick={() => setShowYearPicker(false)}
+            className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-accent transition-colors text-muted-foreground"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M10 12L6 8L10 4"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+          <span className="text-sm font-semibold">Select Year</span>
+        </div>
+        <div className="grid grid-cols-3 gap-1.5">
+          {yearRange.map((y) => (
+            <button
+              key={y}
+              type="button"
+              onClick={() => {
+                setViewYear(y);
+                setShowYearPicker(false);
+              }}
+              className={cn(
+                "h-9 rounded-md text-sm transition-colors",
+                viewYear === y &&
+                  "bg-primary text-primary-foreground font-semibold",
+                viewYear !== y && "hover:bg-accent",
+              )}
+            >
+              {y}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="w-full select-none"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Month/Year nav */}
+      <div className="flex items-center justify-between px-1 mb-3">
+        <button
+          type="button"
+          onClick={prevMonth}
+          className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M10 12L6 8L10 4"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+
+        {/* Clickable Month + Year */}
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setShowMonthPicker(true)}
+            className="text-sm font-semibold px-2 py-1 rounded-md hover:bg-accent transition-colors"
+          >
+            {MONTHS[viewMonth]}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowYearPicker(true)}
+            className="text-sm font-semibold px-2 py-1 rounded-md hover:bg-accent transition-colors"
+          >
+            {viewYear}
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={nextMonth}
+          className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M6 4L10 8L6 12"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      </div>
+
+      {/* Day headers */}
+      <div className="grid grid-cols-7 mb-1">
+        {DAYS.map((d) => (
+          <div
+            key={d}
+            className="text-center text-[11px] font-medium text-muted-foreground py-1"
+          >
+            {d}
+          </div>
+        ))}
+      </div>
+
+      {/* Date cells */}
+      <div className="grid grid-cols-7 gap-y-0.5">
+        {cells.map((day, idx) => {
+          if (!day) return <div key={`empty-${idx}`} />;
+
+          const cellDate = new Date(viewYear, viewMonth, day);
+          cellDate.setHours(0, 0, 0, 0);
+          const isPast = cellDate < today;
+          const isToday = cellDate.getTime() === today.getTime();
+          const isSelected =
+            selected &&
+            selected.getFullYear() === viewYear &&
+            selected.getMonth() === viewMonth &&
+            selected.getDate() === day;
+
+          return (
+            <div key={day} className="flex items-center justify-center py-0.5">
+              <button
+                type="button"
+                disabled={isPast}
+                onClick={() => !isPast && onSelect(cellDate)}
+                className={cn(
+                  "h-8 w-8 rounded-full text-sm font-normal transition-all",
+                  isPast && "opacity-25 cursor-not-allowed",
+                  !isPast &&
+                    !isSelected &&
+                    "hover:bg-accent hover:text-accent-foreground cursor-pointer",
+                  isToday &&
+                    !isSelected &&
+                    "ring-1 ring-primary/60 font-semibold",
+                  isSelected &&
+                    "bg-primary text-primary-foreground font-semibold scale-105 shadow-sm",
+                )}
+              >
+                {day}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ─── Date Picker ──────────────────────────────────────────────────────────────
+
+interface DatePickerProps {
+  deadlineDate: Date | undefined;
+  onSelect: (date: Date | undefined) => void;
+  onClear: () => void;
+  isMobile: boolean;
+}
+
+const DatePickerBody = ({
+  deadlineDate,
+  onSelect,
+  onClear,
+  onDone,
+}: {
+  deadlineDate: Date | undefined;
+  onSelect: (date: Date | undefined) => void;
+  onClear: () => void;
+  onDone?: () => void;
+}) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  const handleDateSelect = (date: Date) => {
+    const d = new Date(date);
+    if (deadlineDate) {
+      d.setHours(deadlineDate.getHours(), deadlineDate.getMinutes(), 0, 0);
+    } else {
+      d.setHours(23, 59, 0, 0);
+    }
+    onSelect(d);
+  };
+
+  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.value || !deadlineDate) return;
+    const [h, m] = e.target.value.split(":").map(Number);
+    const d = new Date(deadlineDate);
+    d.setHours(h, m, 0, 0);
+    onSelect(d);
+  };
+
+  const isToday =
+    deadlineDate && deadlineDate.toDateString() === today.toDateString();
+  const isTomorrow =
+    deadlineDate && deadlineDate.toDateString() === tomorrow.toDateString();
+
+  return (
+    <div className="w-full">
+      {/* Selected date display */}
+      <div className="px-4 py-3 border-b bg-muted/30 mb-2">
+        <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest mb-0.5">
+          Deadline
+        </p>
+        <p className="text-sm font-semibold min-h-[20px] leading-snug">
+          {deadlineDate ? (
+            format(deadlineDate, "EEEE, d MMMM yyyy  ·  h:mm a")
+          ) : (
+            <span className="text-muted-foreground font-normal text-xs">
+              No date selected
+            </span>
+          )}
+        </p>
+      </div>
+
+      {/* Quick shortcuts */}
+      <div className="px-4 pt-2 pb-1 flex gap-2">
+        <button
+          type="button"
+          onClick={() => handleDateSelect(today)}
+          className={cn(
+            "flex-1 h-8 rounded-md text-xs font-medium border transition-colors",
+            isToday
+              ? "bg-primary text-primary-foreground border-primary"
+              : "hover:bg-accent text-muted-foreground border-border",
+          )}
+        >
+          Today
+        </button>
+        <button
+          type="button"
+          onClick={() => handleDateSelect(tomorrow)}
+          className={cn(
+            "flex-1 h-8 rounded-md text-xs font-medium border transition-colors",
+            isTomorrow
+              ? "bg-primary text-primary-foreground border-primary"
+              : "hover:bg-accent text-muted-foreground border-border",
+          )}
+        >
+          Tomorrow
+        </button>
+      </div>
+
+      {/* Divider */}
+      <div className="flex items-center gap-2 px-4 py-1.5">
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+          or pick a date
+        </span>
+        <div className="flex-1 h-px bg-border" />
+      </div>
+
+      {/* Calendar */}
+      <div className="px-4 pb-2">
+        <CustomCalendar selected={deadlineDate} onSelect={handleDateSelect} />
+      </div>
+
+      {/* Time row */}
+      <div className="px-4 py-3 border-t flex items-center gap-3 bg-muted/20">
+        <Label className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+          Time
+        </Label>
+        <Input
+          type="time"
+          className="h-9 text-sm flex-1"
+          value={deadlineDate ? format(deadlineDate, "HH:mm") : "23:59"}
+          disabled={!deadlineDate}
+          onChange={handleTimeChange}
+        />
+      </div>
+
+      {/* Actions */}
+      <div className="px-4 py-3 flex gap-2">
+        {deadlineDate && (
+          <button
+            type="button"
+            onClick={onClear}
+            className="h-9 px-4 rounded-md border text-sm text-muted-foreground hover:text-destructive hover:border-destructive/50 transition-colors"
+          >
+            Clear
+          </button>
+        )}
+        {onDone && (
+          <button
+            type="button"
+            onClick={onDone}
+            className="flex-1 h-9 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+          >
+            Done
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const DeadlinePicker = ({
+  deadlineDate,
+  onSelect,
+  onClear,
+  isMobile,
+}: DatePickerProps) => {
+  const [open, setOpen] = useState(false);
+
+  const triggerButton = (
+    <button
+      type="button"
+      className={cn(
+        "mt-1 w-full flex items-center gap-2.5 rounded-md border px-3 h-10 text-sm text-left transition-colors",
+        "bg-background hover:bg-accent/40 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
+        !deadlineDate ? "text-muted-foreground" : "text-foreground",
+      )}
+    >
+      <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+      <span className="flex-1">
+        {deadlineDate
+          ? format(deadlineDate, "d MMM yyyy  ·  h:mm a")
+          : "No deadline set"}
+      </span>
+      {deadlineDate && (
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClear();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.stopPropagation();
+              onClear();
+            }
+          }}
+          className="ml-1 flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors text-xs font-bold shrink-0"
+        >
+          ✕
+        </span>
+      )}
+    </button>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerTrigger asChild>
+          <button
+            type="button"
+            className={cn(
+              "mt-1 w-full flex items-center gap-2.5 rounded-md border px-3 h-10 text-sm text-left transition-colors",
+              "bg-background hover:bg-accent/40 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
+              !deadlineDate ? "text-muted-foreground" : "text-foreground",
+            )}
+          >
+            <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <span className="flex-1">
+              {deadlineDate
+                ? format(deadlineDate, "d MMM yyyy  ·  h:mm a")
+                : "No deadline set"}
+            </span>
+            {deadlineDate && (
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClear();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.stopPropagation();
+                    onClear();
+                  }
+                }}
+                className="ml-1 flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors text-xs font-bold shrink-0"
+              >
+                ✕
+              </span>
+            )}
+          </button>
+        </DrawerTrigger>
+        <DrawerContent className="max-h-[92dvh]">
+          <DrawerHeader className="pb-0 pt-4">
+            <DrawerTitle className="text-base font-semibold">
+              Registration Deadline
+            </DrawerTitle>
+            <DrawerDescription className="text-xs text-muted-foreground">
+              Select a date and time for the registration deadline.
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="overflow-y-auto">
+            <DatePickerBody
+              deadlineDate={deadlineDate}
+              onSelect={onSelect}
+              onClear={() => {
+                onClear();
+                setOpen(false);
+              }}
+              onDone={() => setOpen(false)}
+            />
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>{triggerButton}</PopoverTrigger>
+      <PopoverContent
+        className="w-[300px] p-0 shadow-lg rounded-xl overflow-hidden border"
+        align="start"
+        sideOffset={6}
+        collisionPadding={12}
+        avoidCollisions
+      >
+        <DatePickerBody
+          deadlineDate={deadlineDate}
+          onSelect={onSelect}
+          onClear={() => {
+            onClear();
+            setOpen(false);
+          }}
+          onDone={() => setOpen(false)}
+        />
+      </PopoverContent>
+    </Popover>
+  );
+};
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const EventForm = () => {
@@ -258,7 +849,6 @@ const EventForm = () => {
   const params = useParams();
   const searchParams = useSearchParams();
 
-  // ✅ BUG FIX: params থেকে id বের করা — Next.js এ params object হয়
   const id = params?.id as string | undefined;
   const templateId = searchParams.get("template");
 
@@ -271,7 +861,6 @@ const EventForm = () => {
     id || "",
   );
 
-  // ✅ সব state গুলো component এর ভেতরে
   const [form, setForm] = useState<FormState>(initialForm);
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [showPreview, setShowPreview] = useState(false);
@@ -296,7 +885,6 @@ const EventForm = () => {
     existingEventRef.current = existingEvent;
   }, [existingEvent]);
 
-  // ✅ Edit mode এ data load
   useEffect(() => {
     if (!isEdit || !id) return;
     setDataReady(false);
@@ -306,7 +894,6 @@ const EventForm = () => {
     });
   }, [id]); // eslint-disable-line
 
-  // Template load
   const { data: templateData } = useQuery({
     queryKey: ["event-template", templateId],
     queryFn: async () => {
@@ -342,7 +929,6 @@ const EventForm = () => {
     setEditorKey((k) => k + 1);
   }, [templateData, isEdit]);
 
-  // User profile (seat limit)
   const { data: userProfile } = useQuery({
     queryKey: ["user-profile-seat-limit", user?.id],
     queryFn: async () => {
@@ -364,7 +950,6 @@ const EventForm = () => {
     if (isFreeEvent) setShowTrxWarning(false);
   }, [isFreeEvent]);
 
-  // Edit mode form populate
   useEffect(() => {
     if (!isEdit) return;
     if (!dataReady) return;
@@ -424,7 +1009,6 @@ const EventForm = () => {
     setEditorKey((k) => k + 1);
   }, [existingEvent, existingFields, isEdit, id, dataReady]);
 
-  // Validation
   useEffect(() => {
     const newErrors = validateForm(form);
     const filteredErrors: FormErrors = {};
@@ -434,14 +1018,12 @@ const EventForm = () => {
     setErrors(filteredErrors);
   }, [form, touched]);
 
-  // Free event এ অন্তত একটা contact field চালু রাখা
   useEffect(() => {
     if (isFreeEvent && !form.show_phone_field && !form.show_email_field) {
       setForm((prev) => ({ ...prev, show_email_field: true }));
     }
   }, [isFreeEvent, form.show_phone_field, form.show_email_field]);
 
-  // Auto save
   const autoSave = useCallback(async () => {
     if (!isEdit || !user || !id || !(formRef.current.title || "").trim())
       return;
@@ -473,7 +1055,6 @@ const EventForm = () => {
     }
   };
 
-  // Payment handlers
   const handlePhoneToggle = (v: boolean) => {
     if (isFreeEvent && !v && !form.show_email_field) {
       toast({
@@ -544,7 +1125,6 @@ const EventForm = () => {
     }
   };
 
-  // Save/Publish mutation
   const mutation = useMutation({
     mutationFn: async (status: "draft" | "published") => {
       if (!user) throw new Error("Not authenticated");
@@ -574,7 +1154,6 @@ const EventForm = () => {
         eventId = data.id;
       }
 
-      // Custom fields
       if (isEdit) {
         await supabase
           .from("custom_form_fields")
@@ -601,7 +1180,7 @@ const EventForm = () => {
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       if (id) queryClient.invalidateQueries({ queryKey: ["event", id] });
       toast({ title: "Event saved successfully!" });
-      router.push("/dashboard"); // ✅ navigate → router.push
+      router.push("/dashboard");
     },
     onError: (err: any) => {
       toast({
@@ -612,7 +1191,6 @@ const EventForm = () => {
     },
   });
 
-  // Loading skeleton
   const isLoadingEdit =
     isEdit &&
     (!dataReady ||
@@ -921,90 +1499,20 @@ const EventForm = () => {
                 </div>
               </div>
 
-              {/* Deadline */}
+              {/* ✅ Mobile-friendly Deadline Picker */}
               <div>
                 <Label>Registration Deadline</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "mt-1 w-full justify-start text-left font-normal",
-                        !deadlineDate && "text-muted-foreground",
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {deadlineDate
-                        ? format(deadlineDate, "PPP p")
-                        : "No deadline set"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={deadlineDate}
-                      onSelect={(date) => {
-                        if (date) {
-                          if (deadlineDate) {
-                            date.setHours(
-                              deadlineDate.getHours(),
-                              deadlineDate.getMinutes(),
-                              0,
-                              0,
-                            );
-                          } else {
-                            date.setHours(23, 59, 59, 0);
-                          }
-                          update("registration_deadline", date.toISOString());
-                        } else {
-                          update("registration_deadline", "");
-                        }
-                      }}
-                      disabled={(date) =>
-                        date < new Date(new Date().setHours(0, 0, 0, 0))
-                      }
-                      initialFocus
-                      className="p-3 pointer-events-auto"
-                    />
-                    {deadlineDate && (
-                      <div className="border-t px-3 py-2">
-                        <Label className="text-xs text-muted-foreground">
-                          Time
-                        </Label>
-                        <Input
-                          type="time"
-                          className="mt-1"
-                          value={
-                            deadlineDate ? format(deadlineDate, "HH:mm") : ""
-                          }
-                          onChange={(e) => {
-                            if (deadlineDate && e.target.value) {
-                              const [h, m] = e.target.value
-                                .split(":")
-                                .map(Number);
-                              const newDate = new Date(deadlineDate);
-                              newDate.setHours(h, m);
-                              update(
-                                "registration_deadline",
-                                newDate.toISOString(),
-                              );
-                            }
-                          }}
-                        />
-                      </div>
-                    )}
-                  </PopoverContent>
-                </Popover>
-                {deadlineDate && (
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="h-auto p-0 text-xs text-muted-foreground mt-1"
-                    onClick={() => update("registration_deadline", "")}
-                  >
-                    Clear deadline
-                  </Button>
-                )}
+                <DeadlinePicker
+                  deadlineDate={deadlineDate}
+                  isMobile={isMobile}
+                  onSelect={(date) => {
+                    update(
+                      "registration_deadline",
+                      date ? date.toISOString() : "",
+                    );
+                  }}
+                  onClear={() => update("registration_deadline", "")}
+                />
               </div>
 
               <div className="space-y-3 pt-2">
