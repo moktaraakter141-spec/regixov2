@@ -32,7 +32,7 @@ export async function generateMetadata({
       ? `${event.venue} — Register now!`
       : "Register now on Regixo!";
 
-  const ogImage = event.banner_url || "https://regixo.com/og-image.jpeg"; // ← absolute URL
+  const ogImage = event.banner_url || "https://regixo.vercel.app/og-image.jpeg";
 
   return {
     title: `${event.title} | Regixo`,
