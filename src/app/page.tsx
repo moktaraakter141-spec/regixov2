@@ -393,7 +393,7 @@ export default function Home() {
               Simple event management
             </div>
 
-            <h1 className="hero-h1">
+            <h1 className="hero-h1 font-display">
               {firstLineStart && `${firstLineStart} `}
               <CornerBox>{firstLineHighlight}</CornerBox>
               {secondLine && (
