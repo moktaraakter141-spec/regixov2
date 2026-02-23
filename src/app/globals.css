@@ -1,26 +1,156 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ─── Fonts ─────────────────────────────────────────── */
+
+/* Manrope — Latin/English only */
+@font-face {
+  font-family: "Manrope";
+  src: url("/fonts/Manrope_wght.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF,
+    U+FFFD;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* NeueMachina — Latin/English only */
+@font-face {
+  font-family: "NeueMachina";
+  src: url("/fonts/NeueMachina-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF,
+    U+FFFD;
 }
 
-@media (prefers-color-scheme: dark) {
+@font-face {
+  font-family: "NeueMachina";
+  src: url("/fonts/NeueMachina-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF,
+    U+FFFD;
+}
+
+@font-face {
+  font-family: "NeueMachina";
+  src: url("/fonts/NeueMachina-Ultrabold.woff2") format("woff2");
+  font-weight: 800;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF,
+    U+FFFD;
+}
+
+/* Siliguri — বাংলা only */
+@font-face {
+  font-family: "Siliguri";
+  src: url("/fonts/HindSiliguri-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+  unicode-range: U+0980-09FF;
+}
+
+@font-face {
+  font-family: "Siliguri";
+  src: url("/fonts/HindSiliguri-Medium.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+  unicode-range: U+0980-09FF;
+}
+
+/* ─── CSS Variables ──────────────────────────────────── */
+
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Page background — গাঢ় কিন্তু pure black না */
+    --background: 220 16% 8%;
+
+    /* Card — background থেকে clearly আলাদা */
+    --card: 220 16% 14%;
+    --card-foreground: 210 30% 95%;
+
+    /* Popover */
+    --popover: 220 16% 14%;
+    --popover-foreground: 210 30% 95%;
+
+    /* Text */
+    --foreground: 210 30% 95%;
+
+    /* Primary button */
+    --primary: 210 40% 90%;
+    --primary-foreground: 220 16% 8%;
+
+    /* Secondary — card এর চেয়ে একটু lighter */
+    --secondary: 220 16% 20%;
+    --secondary-foreground: 210 30% 90%;
+
+    /* Muted — subtle background */
+    --muted: 220 16% 20%;
+    --muted-foreground: 215 18% 58%;
+
+    /* Accent */
+    --accent: 220 16% 22%;
+    --accent-foreground: 210 30% 92%;
+
+    /* Destructive */
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Border — clearly visible */
+    --border: 220 16% 26%;
+
+    /* Input */
+    --input: 220 16% 18%;
+
+    /* Ring */
+    --ring: 210 40% 70%;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ─── Base Styles ────────────────────────────────────── */
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
 }

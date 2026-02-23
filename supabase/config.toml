@@ -1,0 +1,13 @@
+project_id = "cqqnipzdmtfbmvsrbmso"
+
+[functions.verify-registration]
+verify_jwt = false
+
+[functions.register]
+verify_jwt = false
+
+[functions.public-registrations]
+verify_jwt = false
+
+[functions.find-ticket]
+verify_jwt = false
