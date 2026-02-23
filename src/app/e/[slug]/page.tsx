@@ -6,14 +6,16 @@ import PublicEvent from "@/components/events/PublicEvent";
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>; // ← Promise type
 }): Promise<Metadata> {
+  const { slug } = await params; // ← await
+
   const supabase = await createClient();
 
   const { data: event } = await supabase
     .from("events")
-    .select("title, venue, banner_url, description") // ✅ description যোগ করা
-    .eq("slug", params.slug)
+    .select("title, venue, banner_url, description")
+    .eq("slug", slug) // ← params.slug না, শুধু slug
     .in("status", ["published", "closed"])
     .single();
 
@@ -30,7 +32,7 @@ export async function generateMetadata({
       ? `${event.venue} — Register now!`
       : "Register now on Regixo!";
 
-  const ogImage = event.banner_url || "/og-image.jpeg"; // ✅ এখানে
+  const ogImage = event.banner_url || "https://regixo.com/og-image.jpeg"; // ← absolute URL
 
   return {
     title: `${event.title} | Regixo`,
@@ -38,16 +40,17 @@ export async function generateMetadata({
     openGraph: {
       title: event.title,
       description: desc,
-      images: [{ url: ogImage }], // ✅ এখানে use হচ্ছে
+      images: [{ url: ogImage, width: 1200, height: 630 }], // ← width/height
     },
     twitter: {
       card: "summary_large_image",
       title: event.title,
       description: desc,
-      images: [ogImage], // ✅ এখানে use হচ্ছে
+      images: [ogImage],
     },
   };
 }
+
 export default function PublicEventPage() {
   return (
     <Suspense

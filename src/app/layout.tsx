@@ -6,7 +6,9 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://regixo.com"), // ✅ এটা যোগ করা হয়েছে
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "https://regixo.vercel.app",
+  ), // ✅ এটা যোগ করা হয়েছে
   title: "Regixo",
   description: "Event Registration Platform",
   openGraph: {
