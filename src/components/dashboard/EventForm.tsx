@@ -823,6 +823,7 @@ const EventForm = () => {
   const autoSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const formRef = useRef<FormState>(form);
   const existingEventRef = useRef(existingEvent);
+  const newEventIdRef = useRef<string | null>(null); // ← create mode auto-save এর জন্য
 
   useEffect(() => {
     formRef.current = form;
@@ -854,7 +855,6 @@ const EventForm = () => {
     enabled: !!templateId && !isEdit,
   });
 
-  // ✅ FIX: All fields from template are now properly mapped
   useEffect(() => {
     if (!templateData || isEdit) return;
     const t = templateData as any;
@@ -883,7 +883,6 @@ const EventForm = () => {
       payment_method_entries: entries,
       payment_instruction: t.payment_instruction || "",
     }));
-    // Load custom fields from template if present
     if (
       t.custom_fields &&
       Array.isArray(t.custom_fields) &&
@@ -998,35 +997,61 @@ const EventForm = () => {
     }
   }, [isFreeEvent, form.show_phone_field, form.show_email_field]);
 
+  // ─── Auto Save (edit + create mode) ───────────────────────────────────────
+
   const autoSave = useCallback(async () => {
-    if (!isEdit || !user || !id || !(formRef.current.title || "").trim())
-      return;
+    if (!user || !(formRef.current.title || "").trim()) return;
     setAutoSaving(true);
     try {
-      const eventData = buildEventData(
-        formRef.current,
-        user.id,
-        existingEventRef.current?.slug || null,
-        (existingEventRef.current?.status as any) || "draft",
-      );
-      const { error } = await supabase
-        .from("events")
-        .update(eventData)
-        .eq("id", id);
-      if (!error) setLastSaved(new Date());
+      if (isEdit && id) {
+        // Edit mode — আগের মতোই
+        const eventData = buildEventData(
+          formRef.current,
+          user.id,
+          existingEventRef.current?.slug || null,
+          (existingEventRef.current?.status as any) || "draft",
+        );
+        const { error } = await supabase
+          .from("events")
+          .update(eventData)
+          .eq("id", id);
+        if (!error) setLastSaved(new Date());
+      } else if (!isEdit) {
+        // Create mode
+        if (newEventIdRef.current) {
+          // Already created — update করো
+          const { error } = await supabase
+            .from("events")
+            .update(buildEventData(formRef.current, user.id, null, "draft"))
+            .eq("id", newEventIdRef.current);
+          if (!error) setLastSaved(new Date());
+        } else {
+          // প্রথমবার — insert করো
+          const slug = generateSlug(formRef.current.title);
+          const { data, error } = await supabase
+            .from("events")
+            .insert(buildEventData(formRef.current, user.id, slug, "draft"))
+            .select("id")
+            .single();
+          if (!error && data) {
+            newEventIdRef.current = data.id;
+            setLastSaved(new Date());
+            queryClient.invalidateQueries({ queryKey: ["events"] });
+            queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+          }
+        }
+      }
     } catch {
     } finally {
       setAutoSaving(false);
     }
-  }, [isEdit, user, id]);
+  }, [isEdit, user, id, queryClient]);
 
   const update = (key: string, value: any) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     setTouched((prev) => new Set(prev).add(key));
-    if (isEdit) {
-      if (autoSaveTimeout.current) clearTimeout(autoSaveTimeout.current);
-      autoSaveTimeout.current = setTimeout(autoSave, 3000);
-    }
+    if (autoSaveTimeout.current) clearTimeout(autoSaveTimeout.current);
+    autoSaveTimeout.current = setTimeout(autoSave, 3000);
   };
 
   const handlePhoneToggle = (v: boolean) => {
@@ -1074,10 +1099,8 @@ const EventForm = () => {
       (prev) =>
         new Set([...prev, "payment_method_entries", "payment_instruction"]),
     );
-    if (isEdit) {
-      if (autoSaveTimeout.current) clearTimeout(autoSaveTimeout.current);
-      autoSaveTimeout.current = setTimeout(autoSave, 3000);
-    }
+    if (autoSaveTimeout.current) clearTimeout(autoSaveTimeout.current);
+    autoSaveTimeout.current = setTimeout(autoSave, 3000);
   };
 
   const updatePaymentNumber = (method: string, number: string) => {
@@ -1093,10 +1116,8 @@ const EventForm = () => {
       (prev) =>
         new Set([...prev, "payment_method_entries", "payment_instruction"]),
     );
-    if (isEdit) {
-      if (autoSaveTimeout.current) clearTimeout(autoSaveTimeout.current);
-      autoSaveTimeout.current = setTimeout(autoSave, 3000);
-    }
+    if (autoSaveTimeout.current) clearTimeout(autoSaveTimeout.current);
+    autoSaveTimeout.current = setTimeout(autoSave, 3000);
   };
 
   const mutation = useMutation({
@@ -1108,17 +1129,30 @@ const EventForm = () => {
         setErrors(allErrors);
         throw new Error("Please fix the form errors before saving");
       }
-      const slug = isEdit ? existingEvent?.slug : generateSlug(form.title);
-      const eventData = buildEventData(form, user.id, slug || null, status);
+
       let eventId = id;
 
       if (isEdit) {
+        const slug = existingEvent?.slug;
+        const eventData = buildEventData(form, user.id, slug || null, status);
         const { error } = await supabase
           .from("events")
           .update(eventData)
           .eq("id", id!);
         if (error) throw error;
+      } else if (newEventIdRef.current) {
+        // Auto-saved draft আছে — সেটাই update করো
+        const eventData = buildEventData(form, user.id, null, status);
+        const { error } = await supabase
+          .from("events")
+          .update(eventData)
+          .eq("id", newEventIdRef.current);
+        if (error) throw error;
+        eventId = newEventIdRef.current;
       } else {
+        // কোনো auto-save হয়নি — fresh insert
+        const slug = generateSlug(form.title);
+        const eventData = buildEventData(form, user.id, slug, status);
         const { data, error } = await supabase
           .from("events")
           .insert(eventData)
@@ -1128,7 +1162,8 @@ const EventForm = () => {
         eventId = data.id;
       }
 
-      if (isEdit) {
+      // Custom fields
+      if (isEdit || newEventIdRef.current) {
         await supabase
           .from("custom_form_fields")
           .delete()

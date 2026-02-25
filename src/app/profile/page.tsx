@@ -18,7 +18,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Save, User, FileText, Moon, Sun, Menu } from "lucide-react";
+import { Save, User, FileText, Moon, Sun, Menu, AlignLeft } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Sidebar } from "@/components/Sidebar";
 
@@ -93,14 +93,9 @@ const Profile = () => {
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden mr-3 text-muted-foreground hover:text-foreground"
           >
-            <Menu className="h-5 w-5" />
+            <AlignLeft className="h-4 w-4" />
           </button>
-          <h2
-            className="text-lg font-semibold"
-            style={{ fontFamily: "'DM Serif Display', serif" }}
-          >
-            Profile & Settings
-          </h2>
+          <h2 className="text-lg">Profile & Settings</h2>
           <div className="ml-auto">
             <Button
               variant="ghost"

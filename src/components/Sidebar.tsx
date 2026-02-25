@@ -25,7 +25,6 @@ export interface NavItem {
 
 const DASHBOARD_NAV: NavItem[] = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: CalendarDays, label: "Events", path: "/events/new" },
   { icon: BarChart3, label: "Analytics", path: "/dashboard/analytics" },
   { icon: UserCircle, label: "Profile", path: "/profile" },
 ];

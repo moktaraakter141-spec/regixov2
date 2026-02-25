@@ -47,6 +47,7 @@ import {
   ArrowRight,
   TrendingUp,
   Sparkles,
+  AlignLeft,
 } from "lucide-react";
 import { Moon, Sun } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
@@ -275,14 +276,9 @@ const Dashboard = () => {
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden mr-3 text-muted-foreground hover:text-foreground"
           >
-            <Menu className="h-5 w-5" />
+            <AlignLeft className="h-4 w-4" />
           </button>
-          <h2
-            className="text-lg font-semibold"
-            style={{ fontFamily: "'DM Serif Display', serif" }}
-          >
-            Dashboard
-          </h2>
+          <h2 className="text-lg">Dashboard</h2>
           <div className="ml-auto flex items-center gap-2">
             <Button
               variant="ghost"
@@ -394,7 +390,7 @@ const Dashboard = () => {
                     Set up an event, customize the form, and share the link.
                   </p>
                   <Button
-                    onClick={() => router.push("/events/new")}
+                    onClick={() => setTemplateSelectorOpen(true)}
                     className="gap-2"
                   >
                     <Plus className="h-4 w-4" /> Get Started{" "}

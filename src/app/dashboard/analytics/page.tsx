@@ -22,6 +22,7 @@ import {
   Moon,
   Sun,
   Percent,
+  AlignLeft,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useTheme } from "next-themes";
@@ -248,14 +249,9 @@ const Analytics = () => {
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden mr-3 text-muted-foreground hover:text-foreground"
           >
-            <Menu className="h-5 w-5" />
+            <AlignLeft className="h-4 w-4" />
           </button>
-          <h2
-            className="text-lg font-semibold"
-            style={{ fontFamily: "'DM Serif Display', serif" }}
-          >
-            Analytics
-          </h2>
+          <h2 className="text-lg">Analytics</h2>
           <div className="ml-auto">
             <Button
               variant="ghost"
