@@ -611,6 +611,7 @@ const Dashboard = () => {
         open={templateSelectorOpen}
         onClose={() => setTemplateSelectorOpen(false)}
         onSelect={(template) => {
+          setTemplateSelectorOpen(false);
           router.push(
             template ? `/events/new?template=${template.id}` : "/events/new",
           );

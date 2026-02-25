@@ -30,12 +30,29 @@ export interface Template {
   price: number | null;
   guest_limit: number | null;
   instructions: string | null;
+  // ✅ এগুলো যোগ করুন
+  created_at: string;
+  created_by: string;
+  custom_fields: any | null;
+  organizer_contact_email: string | null;
+  organizer_contact_phone: string | null;
+  seat_limit: number | null;
+  allow_late_registration: boolean;
+  show_registered_list: boolean;
+  show_phone_field: boolean;
+  show_email_field: boolean;
+  require_name: boolean;
+  require_transaction_id: boolean;
+  payment_methods: string[];
+  payment_number: string | null;
+  payment_instruction: string | null;
 }
 
+// TemplateSelectorProps
 interface TemplateSelectorProps {
   open: boolean;
   onClose: () => void;
-  onSelect: (template: Template | null) => void;
+  onSelect: (template: Template | null) => void; // ✅ null allow
 }
 
 export const TemplateSelector = ({
@@ -69,9 +86,8 @@ export const TemplateSelector = ({
     );
   }, [templates, search]);
 
-  const handleSelectTemplate = (template: Template) => {
+  const handleSelectTemplate = (template: Template | null) => {
     onSelect(template);
-    onClose();
   };
 
   return (
@@ -102,7 +118,7 @@ export const TemplateSelector = ({
           {/* Blank Event Option */}
           <Card
             className="border-dashed hover:border-primary/50 transition-colors cursor-pointer"
-            onClick={() => handleSelectTemplate(null as any)}
+            onClick={() => handleSelectTemplate(null)}
           >
             <CardContent className="p-4 flex items-center gap-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">

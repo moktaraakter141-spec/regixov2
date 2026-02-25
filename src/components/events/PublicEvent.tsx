@@ -379,6 +379,7 @@ const RegistrationForm = ({
                 }))
               }
               className={inputCls}
+              placeholder={`Enter ${field.field_name}`}
             />
           )}
           {field.field_type === "number" && (
@@ -396,6 +397,7 @@ const RegistrationForm = ({
                 }))
               }
               className={inputCls}
+              placeholder={`Enter ${field.field_name}`}
             />
           )}
           {field.field_type === "select" && (
