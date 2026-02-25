@@ -59,7 +59,7 @@ export default function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("Check your email for a confirmation link!");
+        toast.success("Account created! Redirecting...");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
