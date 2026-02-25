@@ -19,7 +19,7 @@ export async function middleware(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           );
-          supabaseResponse = NextResponse.next({ request });
+          supabaseResponse = NextResponse.next({ request }); // ✅ আগে নতুন response বানাও
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options),
           );
@@ -28,24 +28,28 @@ export async function middleware(request: NextRequest) {
     },
   );
 
+  // ⚠️ IMPORTANT: getUser() কল করার আগে কোনো conditional return দেওয়া যাবে না
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
 
-  // Login ছাড়া protected route এ গেলে auth এ redirect
   const isProtected = protectedRoutes.some((r) => pathname.startsWith(r));
   if (isProtected && !user) {
-    return NextResponse.redirect(new URL("/auth", request.url));
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth";
+    return NextResponse.redirect(url);
   }
 
-  // Login করা থাকলে auth page এ গেলে dashboard এ redirect
   const isAuthRoute = authRoutes.some((r) => pathname.startsWith(r));
   if (isAuthRoute && user) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard";
+    return NextResponse.redirect(url);
   }
 
+  // ✅ অবশ্যই supabaseResponse return করতে হবে, NextResponse.next() না
   return supabaseResponse;
 }
 

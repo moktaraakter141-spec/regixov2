@@ -36,13 +36,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
 
-      if (session?.user) {
+      if (event === "SIGNED_IN" && session?.user) {
         checkAndHandleStatus(session.user.id);
+        router.push("/dashboard");
+      }
+
+      if (event === "SIGNED_OUT") {
+        router.push("/auth");
       }
     });
 
@@ -78,7 +83,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (data.status === "banned") {
         alert("Your account has been permanently banned.");
         await supabase.auth.signOut();
-        router.push("/auth");
         return;
       }
     } catch {
@@ -88,7 +92,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    router.push("/auth");
   };
 
   if (loading) {
