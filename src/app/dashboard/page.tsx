@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,6 +21,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import {
   Plus,
@@ -68,6 +73,65 @@ const statusConfig: Record<
     dotClass: "bg-destructive",
     bgClass: "bg-destructive/10 text-destructive",
   },
+};
+
+const colorMap = {
+  blue: {
+    bg: "bg-blue-50 dark:bg-blue-950/40",
+    icon: "bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400",
+    text: "text-blue-600 dark:text-blue-400",
+    border: "border-blue-100 dark:border-blue-900/50",
+  },
+  violet: {
+    bg: "bg-violet-50 dark:bg-violet-950/40",
+    icon: "bg-violet-100 dark:bg-violet-900/60 text-violet-600 dark:text-violet-400",
+    text: "text-violet-600 dark:text-violet-400",
+    border: "border-violet-100 dark:border-violet-900/50",
+  },
+  green: {
+    bg: "bg-emerald-50 dark:bg-emerald-950/40",
+    icon: "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400",
+    text: "text-emerald-600 dark:text-emerald-400",
+    border: "border-emerald-100 dark:border-emerald-900/50",
+  },
+  amber: {
+    bg: "bg-amber-50 dark:bg-amber-950/40",
+    icon: "bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400",
+    text: "text-amber-600 dark:text-amber-400",
+    border: "border-amber-100 dark:border-amber-900/50",
+  },
+};
+
+const StatCard = ({
+  icon: Icon,
+  value,
+  label,
+  color = "blue",
+}: {
+  icon: typeof CalendarDays;
+  value: number;
+  label: string;
+  color?: keyof typeof colorMap;
+}) => {
+  const c = colorMap[color];
+  return (
+    <Card
+      className={`group hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 overflow-hidden border ${c.border} ${c.bg}`}
+    >
+      <CardContent className="p-4 sm:p-5">
+        <div className="mb-3 flex justify-between items-start">
+          <div
+            className={`flex h-9 w-9 items-center justify-center rounded-lg transition-transform group-hover:scale-110 ${c.icon}`}
+          >
+            <Icon className="h-4 w-4" />
+          </div>
+          <TrendingUp className={`h-3.5 w-3.5 opacity-30 ${c.text}`} />
+        </div>
+        <p className="text-2xl sm:text-3xl font-bold tracking-tight">{value}</p>
+        <p className={`text-xs mt-0.5 font-medium ${c.text}`}>{label}</p>
+      </CardContent>
+    </Card>
+  );
 };
 
 const Dashboard = () => {
@@ -249,22 +313,25 @@ const Dashboard = () => {
                 icon: CalendarDays,
                 value: stats?.totalEvents ?? 0,
                 label: "Total Events",
+                color: "blue" as const,
               },
               {
                 icon: Users,
                 value: stats?.totalRegistrations ?? 0,
                 label: "Registrations",
-                highlight: true,
+                color: "violet" as const,
               },
               {
                 icon: CheckCircle,
                 value: stats?.approvedRegistrations ?? 0,
                 label: "Approved",
+                color: "green" as const,
               },
               {
                 icon: Clock,
                 value: stats?.pendingRegistrations ?? 0,
                 label: "Pending",
+                color: "amber" as const,
               },
             ].map((s) => (
               <div
@@ -364,8 +431,19 @@ const Dashboard = () => {
                       }
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate group-hover:text-primary transition-colors">
-                          {event.title}
+                        <div className="flex items-center gap-2 min-w-0">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <p className="font-medium text-sm truncate group-hover:text-primary transition-colors cursor-default">
+                                  {event.title}
+                                </p>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{event.title}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                           {event.seat_limit &&
                             event.seat_limit > 0 &&
                             (() => {
@@ -376,15 +454,15 @@ const Dashboard = () => {
                               );
                               return (
                                 <span
-                                  className={`ml-2 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${remaining <= 0 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}
+                                  className={`shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${remaining <= 0 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}
                                 >
                                   {remaining <= 0
                                     ? "Full"
-                                    : `${remaining}/${event.seat_limit} seats`}
+                                    : `${remaining}/${event.seat_limit}`}
                                 </span>
                               );
                             })()}
-                        </p>
+                        </div>
                         <p className="text-xs text-muted-foreground truncate sm:hidden mt-0.5">
                           {event.venue || "No venue"} ·{" "}
                           {new Date(event.created_at).toLocaleDateString()}
@@ -541,39 +619,5 @@ const Dashboard = () => {
     </div>
   );
 };
-
-const StatCard = ({
-  icon: Icon,
-  value,
-  label,
-  highlight,
-}: {
-  icon: typeof CalendarDays;
-  value: number;
-  label: string;
-  highlight?: boolean;
-}) => (
-  <Card
-    className={`group hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 overflow-hidden ${highlight ? "border-primary/30" : ""}`}
-  >
-    <CardContent className="p-4 sm:p-5 relative">
-      {highlight && (
-        <div className="absolute inset-0 bg-primary/5 pointer-events-none" />
-      )}
-      <div className="mb-3 relative flex justify-between">
-        <div
-          className={`flex h-9 w-9 items-center justify-center rounded-lg transition-transform group-hover:scale-110 ${highlight ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
-        >
-          <Icon className="h-4 w-4" />
-        </div>
-        <TrendingUp className="h-3.5 w-3.5 text-muted-foreground/30" />
-      </div>
-      <p className="text-2xl sm:text-3xl font-bold tracking-tight relative">
-        {value}
-      </p>
-      <p className="text-xs text-muted-foreground mt-0.5 relative">{label}</p>
-    </CardContent>
-  </Card>
-);
 
 export default Dashboard;

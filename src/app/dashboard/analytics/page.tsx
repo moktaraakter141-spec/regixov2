@@ -15,7 +15,6 @@ import {
   CalendarDays,
   Users,
   Menu,
-  BarChart3,
   TrendingUp,
   DollarSign,
   ArrowUpRight,
@@ -50,6 +49,75 @@ const PIE_COLORS = [
   "hsl(0, 84%, 60%)",
   "hsl(280, 60%, 55%)",
 ];
+
+const colorMap = {
+  blue: {
+    bg: "bg-blue-50 dark:bg-blue-950/40",
+    icon: "bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400",
+    text: "text-blue-600 dark:text-blue-400",
+    border: "border-blue-100 dark:border-blue-900/50",
+  },
+  violet: {
+    bg: "bg-violet-50 dark:bg-violet-950/40",
+    icon: "bg-violet-100 dark:bg-violet-900/60 text-violet-600 dark:text-violet-400",
+    text: "text-violet-600 dark:text-violet-400",
+    border: "border-violet-100 dark:border-violet-900/50",
+  },
+  green: {
+    bg: "bg-emerald-50 dark:bg-emerald-950/40",
+    icon: "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400",
+    text: "text-emerald-600 dark:text-emerald-400",
+    border: "border-emerald-100 dark:border-emerald-900/50",
+  },
+  amber: {
+    bg: "bg-amber-50 dark:bg-amber-950/40",
+    icon: "bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400",
+    text: "text-amber-600 dark:text-amber-400",
+    border: "border-amber-100 dark:border-amber-900/50",
+  },
+};
+
+const MetricCard = ({
+  icon: Icon,
+  value,
+  label,
+  color = "blue",
+  trend,
+}: {
+  icon: typeof CalendarDays;
+  value: number | string;
+  label: string;
+  color?: keyof typeof colorMap;
+  trend?: "up" | "down";
+}) => {
+  const c = colorMap[color];
+  return (
+    <Card
+      className={`group hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 overflow-hidden border ${c.border} ${c.bg}`}
+    >
+      <CardContent className="p-4 sm:p-5">
+        <div className="flex items-start justify-between mb-3">
+          <div
+            className={`flex h-9 w-9 items-center justify-center rounded-lg transition-transform group-hover:scale-110 ${c.icon}`}
+          >
+            <Icon className="h-4 w-4" />
+          </div>
+          {trend === "up" && (
+            <ArrowUpRight className="h-4 w-4 text-emerald-500" />
+          )}
+          {trend === "down" && (
+            <ArrowDownRight className="h-4 w-4 text-destructive" />
+          )}
+          {!trend && (
+            <TrendingUp className={`h-3.5 w-3.5 opacity-30 ${c.text}`} />
+          )}
+        </div>
+        <p className="text-2xl sm:text-3xl font-bold tracking-tight">{value}</p>
+        <p className={`text-xs mt-0.5 font-medium ${c.text}`}>{label}</p>
+      </CardContent>
+    </Card>
+  );
+};
 
 const Analytics = () => {
   const { user } = useAuth();
@@ -212,22 +280,25 @@ const Analytics = () => {
                 icon: CalendarDays,
                 value: stats?.totalEvents ?? 0,
                 label: "Total Events",
+                color: "blue" as const,
               },
               {
                 icon: Users,
                 value: stats?.totalRegistrations ?? 0,
                 label: "Registrations",
-                highlight: true,
+                color: "violet" as const,
               },
               {
                 icon: DollarSign,
                 value: `৳${revenueData.total.toLocaleString()}`,
                 label: "Total Revenue",
+                color: "green" as const,
               },
               {
                 icon: Percent,
                 value: `${conversionRate}%`,
                 label: "Approval Rate",
+                color: "amber" as const,
                 trend: (conversionRate >= 50 ? "up" : "down") as "up" | "down",
               },
             ].map((s) => (
@@ -536,48 +607,5 @@ const Analytics = () => {
     </div>
   );
 };
-
-const MetricCard = ({
-  icon: Icon,
-  value,
-  label,
-  highlight,
-  trend,
-}: {
-  icon: typeof CalendarDays;
-  value: number | string;
-  label: string;
-  highlight?: boolean;
-  trend?: "up" | "down";
-}) => (
-  <Card
-    className={`group hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 overflow-hidden ${highlight ? "border-primary/30" : ""}`}
-  >
-    <CardContent className="p-4 sm:p-5 relative">
-      {highlight && (
-        <div className="absolute inset-0 bg-primary/5 pointer-events-none" />
-      )}
-      <div className="flex items-start justify-between mb-3 relative">
-        <div
-          className={`flex h-9 w-9 items-center justify-center rounded-lg transition-transform group-hover:scale-110
-          ${highlight ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
-        >
-          <Icon className="h-4 w-4" />
-        </div>
-        {trend === "up" && <ArrowUpRight className="h-4 w-4 text-green-500" />}
-        {trend === "down" && (
-          <ArrowDownRight className="h-4 w-4 text-destructive" />
-        )}
-        {!trend && (
-          <TrendingUp className="h-3.5 w-3.5 text-muted-foreground/30" />
-        )}
-      </div>
-      <p className="text-2xl sm:text-3xl font-bold tracking-tight relative">
-        {value}
-      </p>
-      <p className="text-xs text-muted-foreground mt-0.5 relative">{label}</p>
-    </CardContent>
-  </Card>
-);
 
 export default Analytics;

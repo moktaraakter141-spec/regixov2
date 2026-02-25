@@ -46,9 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         router.push("/dashboard");
       }
 
-      if (event === "SIGNED_OUT") {
-        router.push("/auth");
-      }
+      // ❌ SIGNED_OUT এখানে নেই
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -83,6 +81,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (data.status === "banned") {
         alert("Your account has been permanently banned.");
         await supabase.auth.signOut();
+        router.push("/auth"); // banned হলে directly push
         return;
       }
     } catch {
@@ -92,6 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    router.push("/auth"); // ✅ directly push, event এর উপর depend না করে
   };
 
   if (loading) {
