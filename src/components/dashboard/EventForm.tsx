@@ -308,7 +308,6 @@ const CustomCalendar = ({ selected, onSelect }: CustomCalendarProps) => {
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [showYearPicker, setShowYearPicker] = useState(false);
 
-  // Swipe handling
   const touchStartX = useRef<number | null>(null);
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -336,12 +335,10 @@ const CustomCalendar = ({ selected, onSelect }: CustomCalendarProps) => {
     } else setViewMonth((m) => m + 1);
   };
 
-  // Year range: current year ± 5
   const yearRange = Array.from(
     { length: 8 },
     (_, i) => today.getFullYear() + i,
   );
-
   const firstDay = new Date(viewYear, viewMonth, 1).getDay();
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const cells: (number | null)[] = [
@@ -453,7 +450,6 @@ const CustomCalendar = ({ selected, onSelect }: CustomCalendarProps) => {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Month/Year nav */}
       <div className="flex items-center justify-between px-1 mb-3">
         <button
           type="button"
@@ -470,8 +466,6 @@ const CustomCalendar = ({ selected, onSelect }: CustomCalendarProps) => {
             />
           </svg>
         </button>
-
-        {/* Clickable Month + Year */}
         <div className="flex items-center gap-1">
           <button
             type="button"
@@ -488,7 +482,6 @@ const CustomCalendar = ({ selected, onSelect }: CustomCalendarProps) => {
             {viewYear}
           </button>
         </div>
-
         <button
           type="button"
           onClick={nextMonth}
@@ -505,8 +498,6 @@ const CustomCalendar = ({ selected, onSelect }: CustomCalendarProps) => {
           </svg>
         </button>
       </div>
-
-      {/* Day headers */}
       <div className="grid grid-cols-7 mb-1">
         {DAYS.map((d) => (
           <div
@@ -517,12 +508,9 @@ const CustomCalendar = ({ selected, onSelect }: CustomCalendarProps) => {
           </div>
         ))}
       </div>
-
-      {/* Date cells */}
       <div className="grid grid-cols-7 gap-y-0.5">
         {cells.map((day, idx) => {
           if (!day) return <div key={`empty-${idx}`} />;
-
           const cellDate = new Date(viewYear, viewMonth, day);
           cellDate.setHours(0, 0, 0, 0);
           const isPast = cellDate < today;
@@ -532,7 +520,6 @@ const CustomCalendar = ({ selected, onSelect }: CustomCalendarProps) => {
             selected.getFullYear() === viewYear &&
             selected.getMonth() === viewMonth &&
             selected.getDate() === day;
-
           return (
             <div key={day} className="flex items-center justify-center py-0.5">
               <button
@@ -563,13 +550,6 @@ const CustomCalendar = ({ selected, onSelect }: CustomCalendarProps) => {
 };
 
 // ─── Date Picker ──────────────────────────────────────────────────────────────
-
-interface DatePickerProps {
-  deadlineDate: Date | undefined;
-  onSelect: (date: Date | undefined) => void;
-  onClear: () => void;
-  isMobile: boolean;
-}
 
 const DatePickerBody = ({
   deadlineDate,
@@ -612,7 +592,6 @@ const DatePickerBody = ({
 
   return (
     <div className="w-full">
-      {/* Selected date display */}
       <div className="px-4 py-3 border-b bg-muted/30 mb-2">
         <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest mb-0.5">
           Deadline
@@ -627,8 +606,6 @@ const DatePickerBody = ({
           )}
         </p>
       </div>
-
-      {/* Quick shortcuts */}
       <div className="px-4 pt-2 pb-1 flex gap-2">
         <button
           type="button"
@@ -655,8 +632,6 @@ const DatePickerBody = ({
           Tomorrow
         </button>
       </div>
-
-      {/* Divider */}
       <div className="flex items-center gap-2 px-4 py-1.5">
         <div className="flex-1 h-px bg-border" />
         <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
@@ -664,13 +639,9 @@ const DatePickerBody = ({
         </span>
         <div className="flex-1 h-px bg-border" />
       </div>
-
-      {/* Calendar */}
       <div className="px-4 pb-2">
         <CustomCalendar selected={deadlineDate} onSelect={handleDateSelect} />
       </div>
-
-      {/* Time row */}
       <div className="px-4 py-3 border-t flex items-center gap-3 bg-muted/20">
         <Label className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
           Time
@@ -683,8 +654,6 @@ const DatePickerBody = ({
           onChange={handleTimeChange}
         />
       </div>
-
-      {/* Actions */}
       <div className="px-4 py-3 flex gap-2">
         {deadlineDate && (
           <button
@@ -714,18 +683,16 @@ const DeadlinePicker = ({
   onSelect,
   onClear,
   isMobile,
-}: DatePickerProps) => {
+}: {
+  deadlineDate: Date | undefined;
+  onSelect: (date: Date | undefined) => void;
+  onClear: () => void;
+  isMobile: boolean;
+}) => {
   const [open, setOpen] = useState(false);
 
-  const triggerButton = (
-    <button
-      type="button"
-      className={cn(
-        "mt-1 w-full flex items-center gap-2.5 rounded-md border px-3 h-10 text-sm text-left transition-colors",
-        "bg-background hover:bg-accent/40 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
-        !deadlineDate ? "text-muted-foreground" : "text-foreground",
-      )}
-    >
+  const triggerContent = (
+    <>
       <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
       <span className="flex-1">
         {deadlineDate
@@ -751,46 +718,21 @@ const DeadlinePicker = ({
           ✕
         </span>
       )}
-    </button>
+    </>
+  );
+
+  const triggerClass = cn(
+    "mt-1 w-full flex items-center gap-2.5 rounded-md border px-3 h-10 text-sm text-left transition-colors",
+    "bg-background hover:bg-accent/40 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
+    !deadlineDate ? "text-muted-foreground" : "text-foreground",
   );
 
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={setOpen}>
         <DrawerTrigger asChild>
-          <button
-            type="button"
-            className={cn(
-              "mt-1 w-full flex items-center gap-2.5 rounded-md border px-3 h-10 text-sm text-left transition-colors",
-              "bg-background hover:bg-accent/40 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
-              !deadlineDate ? "text-muted-foreground" : "text-foreground",
-            )}
-          >
-            <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="flex-1">
-              {deadlineDate
-                ? format(deadlineDate, "d MMM yyyy  ·  h:mm a")
-                : "No deadline set"}
-            </span>
-            {deadlineDate && (
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onClear();
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.stopPropagation();
-                    onClear();
-                  }
-                }}
-                className="ml-1 flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors text-xs font-bold shrink-0"
-              >
-                ✕
-              </span>
-            )}
+          <button type="button" className={triggerClass}>
+            {triggerContent}
           </button>
         </DrawerTrigger>
         <DrawerContent className="max-h-[92dvh]">
@@ -820,7 +762,11 @@ const DeadlinePicker = ({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>{triggerButton}</PopoverTrigger>
+      <PopoverTrigger asChild>
+        <button type="button" className={triggerClass}>
+          {triggerContent}
+        </button>
+      </PopoverTrigger>
       <PopoverContent
         className="w-[300px] p-0 shadow-lg rounded-xl overflow-hidden border"
         align="start"
@@ -908,24 +854,52 @@ const EventForm = () => {
     enabled: !!templateId && !isEdit,
   });
 
+  // ✅ FIX: All fields from template are now properly mapped
   useEffect(() => {
     if (!templateData || isEdit) return;
+    const t = templateData as any;
     const entries = parsePaymentEntries(
-      (templateData as any).payment_methods || [],
-      (templateData as any).payment_number || "",
+      t.payment_methods || [],
+      t.payment_number || "",
     );
     setForm((prev) => ({
       ...prev,
-      title: (templateData as any).title || "",
-      description: (templateData as any).description || "",
-      banner_url: (templateData as any).banner_url || null,
-      venue: (templateData as any).venue || "",
-      instructions: (templateData as any).instructions || "",
-      price: (templateData as any).price ?? "",
-      seat_limit: (templateData as any).seat_limit ?? "",
+      title: t.title || "",
+      description: t.description || "",
+      banner_url: t.banner_url || null,
+      venue: t.venue || "",
+      organizer_contact_email: t.organizer_contact_email || "",
+      organizer_contact_phone: t.organizer_contact_phone || "",
+      instructions: t.instructions || "",
+      price: t.price ?? "",
+      seat_limit: t.seat_limit ?? "",
+      guest_limit: t.guest_limit ?? "",
+      allow_late_registration: t.allow_late_registration ?? false,
+      show_registered_list: t.show_registered_list ?? false,
+      show_phone_field: t.show_phone_field ?? true,
+      show_email_field: t.show_email_field ?? true,
+      require_name: t.require_name ?? true,
+      require_transaction_id: t.require_transaction_id ?? true,
       payment_method_entries: entries,
-      payment_instruction: (templateData as any).payment_instruction || "",
+      payment_instruction: t.payment_instruction || "",
     }));
+    // Load custom fields from template if present
+    if (
+      t.custom_fields &&
+      Array.isArray(t.custom_fields) &&
+      t.custom_fields.length > 0
+    ) {
+      setCustomFields(
+        t.custom_fields.map((f: any, i: number) => ({
+          id: `template-field-${i}`,
+          field_name: f.field_name || "",
+          field_type: f.field_type || "text",
+          field_options: f.field_options || null,
+          is_required: f.is_required ?? false,
+          sort_order: i,
+        })),
+      );
+    }
     setEditorKey((k) => k + 1);
   }, [templateData, isEdit]);
 
@@ -1234,8 +1208,6 @@ const EventForm = () => {
     (m) => !selectedMethods.includes(m),
   );
 
-  // ─── JSX ─────────────────────────────────────────────────────────────────
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -1343,7 +1315,6 @@ const EventForm = () => {
                   </span>
                 </div>
               </div>
-
               <div>
                 <Label className="mb-2 block">Event Banner</Label>
                 <BannerUpload
@@ -1371,7 +1342,6 @@ const EventForm = () => {
                   </p>
                 )}
               </div>
-
               <div>
                 <Label className="mb-2 block">Description</Label>
                 <TiptapEditor
@@ -1498,23 +1468,20 @@ const EventForm = () => {
                   <FieldError message={errors.price} />
                 </div>
               </div>
-
-              {/* ✅ Mobile-friendly Deadline Picker */}
               <div>
                 <Label>Registration Deadline</Label>
                 <DeadlinePicker
                   deadlineDate={deadlineDate}
                   isMobile={isMobile}
-                  onSelect={(date) => {
+                  onSelect={(date) =>
                     update(
                       "registration_deadline",
                       date ? date.toISOString() : "",
-                    );
-                  }}
+                    )
+                  }
                   onClear={() => update("registration_deadline", "")}
                 />
               </div>
-
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between rounded-lg border p-3">
                   <div>
@@ -1575,7 +1542,6 @@ const EventForm = () => {
                   onCheckedChange={() => {}}
                 />
               </div>
-
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -1604,7 +1570,6 @@ const EventForm = () => {
                   onCheckedChange={handlePhoneToggle}
                 />
               </div>
-
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -1633,7 +1598,6 @@ const EventForm = () => {
                   onCheckedChange={handleEmailToggle}
                 />
               </div>
-
               {isFreeEvent && (
                 <p className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2">
                   <AlertCircle className="h-3.5 w-3.5 shrink-0" />
@@ -1687,7 +1651,6 @@ const EventForm = () => {
                   ))}
                 </div>
               )}
-
               {availableToAdd.length > 0 && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-2 block">
@@ -1710,7 +1673,6 @@ const EventForm = () => {
                   </div>
                 </div>
               )}
-
               <div>
                 <Label htmlFor="payment-instruction">
                   Payment Instructions
@@ -1733,7 +1695,6 @@ const EventForm = () => {
                   className="mt-1 flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[80px] resize-y disabled:cursor-not-allowed"
                 />
               </div>
-
               <div className="space-y-2">
                 <div className="flex items-center justify-between rounded-lg border p-3">
                   <div>
@@ -1755,7 +1716,6 @@ const EventForm = () => {
                     }}
                   />
                 </div>
-
                 {showTrxWarning && (
                   <div className="rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/20 p-3 space-y-2">
                     <p className="text-xs text-amber-800 dark:text-amber-300 flex items-start gap-1.5">

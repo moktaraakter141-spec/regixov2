@@ -43,7 +43,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (event === "SIGNED_IN" && session?.user) {
         checkAndHandleStatus(session.user.id);
-        router.push("/dashboard");
+
+        const currentPath = window.location.pathname;
+        if (currentPath === "/auth") {
+          router.push("/dashboard");
+        }
       }
 
       // ❌ SIGNED_OUT এখানে নেই
