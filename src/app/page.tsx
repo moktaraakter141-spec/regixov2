@@ -3,7 +3,7 @@
 import type { Metadata } from "next";
 import Home from "@/components/Home"; // আগের "use client" component আলাদা file এ
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://regixo.com";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://regixo.vercel.app";
 
 export const metadata: Metadata = {
   title: "Regixo — Event Registration, Simplified",
